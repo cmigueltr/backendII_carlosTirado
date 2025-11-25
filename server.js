@@ -12,34 +12,46 @@ import sessionsRouter from './src/routes/sessions.routes.js';
 import usersRouter from './src/routes/users.routes.js';
 
 const app = express();
-connectDB();
 
-// middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(express.static('public'));
+// Initialize app
+async function startServer() {
+  try {
+    // Connect to database
+    await connectDB();
 
-// handlebars
-app.engine('handlebars', engine());
-app.set('view engine', 'handlebars');
-app.set('views', './src/views');
+    // middlewares
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(cookieParser());
+    app.use(express.static('public'));
 
-// passport
-initPassport();
-app.use(passport.initialize());
+    // handlebars
+    app.engine('handlebars', engine());
+    app.set('view engine', 'handlebars');
+    app.set('views', './src/views');
 
-// routes
-app.use('/api/sessions', sessionsRouter);
-app.use('/api/users', usersRouter);
+    // passport
+    initPassport();
+    app.use(passport.initialize());
 
-// simple page routes for auth views
-app.get('/', (req, res) => res.redirect('/login'));
-app.get('/register', (req, res) => res.render('register'));
-app.get('/login', (req, res) => res.render('login'));
-app.get('/profile', passport.authenticate('current', { session: false }), (req, res) => {
-  res.render('profile', { user: req.user });
-});
+    // routes
+    app.use('/api/sessions', sessionsRouter);
+    app.use('/api/users', usersRouter);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    // simple page routes for auth views
+    app.get('/', (req, res) => res.redirect('/login'));
+    app.get('/register', (req, res) => res.render('register'));
+    app.get('/login', (req, res) => res.render('login'));
+    app.get('/profile', passport.authenticate('current', { session: false }), (req, res) => {
+      res.render('profile', { user: req.user });
+    });
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
