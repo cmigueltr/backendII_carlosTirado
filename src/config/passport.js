@@ -1,8 +1,7 @@
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
-import bcrypt from 'bcrypt';
-import User from '../models/user.model.js';
+import { UserRepository } from '../repositories/user.repository.js';
 
 const LocalStrategyCtor = LocalStrategy.Strategy;
 
@@ -12,10 +11,10 @@ export default function initPassport() {
     { usernameField: 'email', passwordField: 'password', session: false },
     async (email, password, done) => {
       try {
-        const user = await User.findOne({ email });
+        const user = await UserRepository.findByEmail(email);
         if (!user) return done(null, false, { message: 'Usuario no encontrado' });
 
-        const valid = bcrypt.compareSync(password, user.password);
+        const valid = await UserRepository.verifyPassword(password, user.password);
         if (!valid) return done(null, false, { message: 'Contraseña incorrecta' });
 
         const safeUser = user.toObject();
@@ -36,9 +35,12 @@ export default function initPassport() {
     try {
       // payload will include sub (user id) when we sign token
       const userId = jwt_payload.sub;
-      const user = await User.findById(userId).select('-password');
+      const user = await UserRepository.findById(userId);
       if (!user) return done(null, false, { message: 'Token válido, usuario no encontrado' });
-      return done(null, user);
+      
+      const safeUser = user.toObject();
+      delete safeUser.password;
+      return done(null, safeUser);
     } catch (err) {
       return done(err, false);
     }

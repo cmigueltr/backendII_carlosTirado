@@ -10,6 +10,10 @@ import connectDB from './src/config/db.js';
 import initPassport from './src/config/passport.js';
 import sessionsRouter from './src/routes/sessions.routes.js';
 import usersRouter from './src/routes/users.routes.js';
+import productsRouter from './src/routes/products.routes.js';
+import cartsRouter from './src/routes/carts.routes.js';
+import ticketsRouter from './src/routes/tickets.routes.js';
+import { authenticate } from './src/middlewares/auth.middleware.js';
 
 const app = express();
 
@@ -37,12 +41,15 @@ async function startServer() {
     // routes
     app.use('/api/sessions', sessionsRouter);
     app.use('/api/users', usersRouter);
+    app.use('/api/products', productsRouter);
+    app.use('/api/carts', cartsRouter);
+    app.use('/api/tickets', ticketsRouter);
 
     // simple page routes for auth views
     app.get('/', (req, res) => res.redirect('/login'));
     app.get('/register', (req, res) => res.render('register'));
     app.get('/login', (req, res) => res.render('login'));
-    app.get('/profile', passport.authenticate('current', { session: false }), (req, res) => {
+    app.get('/profile', authenticate, (req, res) => {
       res.render('profile', { user: req.user });
     });
 

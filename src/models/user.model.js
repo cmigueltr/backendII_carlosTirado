@@ -8,8 +8,10 @@ const userSchema = new Schema({
   email:      { type: String, required: [true, 'email obligatorio'], unique: true },
   age:        { type: Number, min: [0, 'age debe ser >= 0'] },
   password:   { type: String, required: [true, 'password obligatorio'] }, // hash
-  // cart no requerido para esta consigna, lo omitimos
-  role:       { type: String, enum: ['user', 'admin'], default: 'user' }
+  role:       { type: String, enum: ['user', 'admin'], default: 'user' },
+  cart:       { type: Schema.Types.ObjectId, ref: 'Cart' },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
